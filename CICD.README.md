@@ -121,8 +121,8 @@ The 6 steps above checks out the code on github, build the project with maven, l
 On your Digital Ocean droplet, you need to have docker and docker-compose installed. If you don't have it installed, the easiest thing to do is craete a new droplet from marketplace and choose docker
 <img src="images/do.png" width=300>
 
-7. Somewhere (`mkdir devops && cd devops`) on your D.O. droplet create a new file called docker-compose.yml.
-8. Copy the following code into the docker-compose.yml file
+7. Somewhere (`mkdir devops && cd devops`) on your D.O. droplet create a new file called compose.yaml (or docker-compose.yml).
+8. Copy the following code into the compose.yaml file
 
 ```yaml
 version: '3.9'
@@ -130,7 +130,7 @@ version: '3.9'
 services:
   api:
     image: <YOUR-DOCKERHUB-NAME>/<NAME-OF-DOCKERHUB-REPOSITORY>:<DOCKER-TAG>
-    container_name: <CONTAINER-NAME CAN BE FOUND IN POM FILE>
+    container_name: app
     environment:
       - CONNECTION_STR=jdbc:postgresql://db:<PORT-NUMBER>/
       - DB_USERNAME=<DB-PASSWORD>

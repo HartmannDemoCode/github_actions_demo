@@ -45,8 +45,8 @@ public class SecurityTest {
                 .setGeneralExceptionHandling()
                 .setRoutes(restRoutes.getPersonRoutes())
                 .setRoutes(SecurityRoutes.getSecurityRoutes())
-                .checkSecurityRoles()
                 .setRoutes(SecurityRoutes.getSecuredRoutes())
+                .checkSecurityRoles()
                 .setApiExceptionHandling()
         ;
     }
