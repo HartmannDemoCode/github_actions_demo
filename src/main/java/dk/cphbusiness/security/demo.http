@@ -20,3 +20,15 @@ Authorization: Baerer eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJUaG9tYXMgSGFydG1hbm4iLCJzd
 GET http://localhost:7007/api/protected/admin_demo
 Authorization: Baerer eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJUaG9tYXMgSGFydG1hbm4iLCJzdWIiOiJ0ZXN0IiwiZXhwIjoxNjk3MDQxNjQ4LCJyb2xlcyI6InVzZXIiLCJ1c2VybmFtZSI6InRlc3QifQ.8b7o0ADrpO11iBfIkyb9RHvgZBD6MXf8xoy9DIG_j6o
 ###
+POST http://104.248.29.155:7007/api/auth/login
+
+    {
+        "username": "user1",
+        "password": "test123"
+    }
+
+###
+GET http://104.248.29.155:7007/api/protected/user_demo
+Authorization: Baerer eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJUaG9tYXMtSGFydG1hbm4iLCJzdWIiOiJ1c2VyMSIsImV4cCI6MTY5ODM0NjM0Nywicm9sZXMiOiJhZG1pbix1c2VyIiwidXNlcm5hbWUiOiJ1c2VyMSJ9.ktviB3A3wLXvW9KtvfObixiEO3xccfsbNN9TXKWKOoM
+
+###

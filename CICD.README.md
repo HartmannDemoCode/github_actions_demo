@@ -125,30 +125,58 @@ On your Digital Ocean droplet, you need to have docker and docker-compose instal
 8. Copy the following code into the compose.yaml file
 
 ```yaml
-version: '3.9'
+    version: '3.9'
 
-services:
-  api:
-    image: <YOUR-DOCKERHUB-NAME>/<NAME-OF-DOCKERHUB-REPOSITORY>:<DOCKER-TAG>
-    container_name: app
-    environment:
-      - CONNECTION_STR=jdbc:postgresql://db:<PORT-NUMBER>/
-      - DB_USERNAME=<DB-PASSWORD>
-      - DB_PASSWORD=<DB-PASSWORD>
-      - DEPLOYED=<DEPLOYMENT>
-      - SECRET_KEY=<YOUR-SECRET-KEY>
-      - TOKEN_EXPIRE_TIME=<TOKEN_EXPIRE_TIME>
-      - ISSUER=<ISSUER>
-    ports:
-      - "7007:7007"
+    services:
+      api:
+        image: webtrade/ci_cd_javalin_demo:latest
+        container_name: app
+        environment:
+          CONNECTION_STR: ${CONNECTION_STR}
+          DB_USERNAME: ${DB_PASSWORD}
+          DB_PASSWORD: ${DB_PASSWORD}
+          DEPLOYED: ${DEPLOYED}
+          SECRET_KEY: ${SECRET_KEY}
+          TOKEN_EXPIRE_TIME: ${TOKEN_EXPIRE_TIME}
+          ISSUER: ${ISSUER}
+        ports:
+          - "7007:7007"
+        networks:
+          - database_network
+
+      db:
+        # arm64v8/postgres:latest for MAC users with m1 or m2 processor
+        image: postgres:15.3-alpine3.18
+        container_name: db
+        restart: unless-stopped
+        networks:
+          - database_network
+        environment:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        volumes:
+          - ./db-data:/var/lib/postgresql/data/
+          - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+        ports:
+          - "5432:5432"
+
     networks:
-      - database_network
+      database_network:
+        name: database_network
+        internal: false
+        driver: bridge
 
-networks:
-  database_network:
-    name: database_network
-    internal: false
-    driver: bridge
+```
+As we can see above we are creating 2 containers. One for the application and one for the database. The application container will be build from the docker image that we created in the previous step. The image will be pulled from dockerhub and run on the droplet.
+The service called `db` has a volume that will be mounted to the database container. This will make sure that the data in the database will be persisted even if the container is removed. The database container will be created from the postgres image on dockerhub. The application container will be able to connect to the database container through the network.
+When the postgres image container starts up it executes whatever script is in the init.sql file. In this case we are creating a new database called `database name` and a new user called `database name` with password `database name`. The database name and password should be the same as the ones you set in the pom file.
+So we need to create a new file ./db/init.sql that contains the following code:
+
+```sql
+CREATE DATABASE <DB-NAME>;
+-- If you want to create a new user for the database:
+-- CREATE USER <DB-NAME> WITH ENCRYPTED PASSWORD '<DB-PASSWORD>';
+-- GRANT ALL PRIVILEGES ON DATABASE <DB-NAME> TO <DB-NAME>;
 ```
 9. In the same location create a new file called .env
 10. Copy the following code into the .env file
@@ -158,8 +186,8 @@ CONNECTION_STR=jdbc:postgresql://db:<PORT-NUMBER>/
 DB_USERNAME=<DB-PASSWORD>
 DB_PASSWORD=<DB-PASSWORD>
 DEPLOYED=<DEPLOYED>
-SECRET_KEY=<YOUR-SECRET-KEY-FOR-JWT>
-TOKEN_EXPIRE_TIME=TOKEN_EXPIRE_TIME
+SECRET_KEY=CHANGETHISKEYTOSOMETHINGWITHATLEAST32CHARACTERS
+TOKEN_EXPIRE_TIME=1800000
 ISSUER=<ISSUER>
 ```
 
@@ -179,8 +207,8 @@ The settings we keep in .env file should be settings that are used by all our ap
 
 #### Test the application
 1. Go to the root of the project on your droplet
-2. Run the following command: `docker-compose up -d`
-3. Run the following command: `docker-compose logs -f`
+2. Run the following command: `docker compose up -d`
+3. Run the following command: `docker compose logs -f`
 4. If everything went well you should see the Javalin application starting up. 
 5. Now you can test the application by sending requests to the droplet on port 7007 from your browser, curl or postman etc.
 
@@ -190,8 +218,17 @@ The settings we keep in .env file should be settings that are used by all our ap
 3. Remember to change the main class in the pom.xml shade plugin section if you have changed the main class
 4. Commit and push your changes to github. And go to the actions tab to see the workflow in action.
 5. SSH into droplet to pull the latest changes from dockerhub and restart the application container
-  - `docker-compose stop`
-  - `docker-compose rm -f`
-  - `docker-compose pull api`
-  - `docker-compose up -d` 
+  - `docker compose stop`
+  - `docker compose rm -f`
+  - `docker compose pull api`
+  - `docker compose up -d` 
 6. Test the application again in the browser.
+
+## Part 5 - Debugging
+On the droplet we can use the following commands to debug the application:
+- `docker compose logs -f` to see the logs from the application (-f for `--follow` the output)
+- `docker exec app bash` to get a bash shell inside the application container
+- `docker exec db bash` to get a bash shell inside the database container
+- `docker compose stop` to stop the containers
+- `docker compose down` to remove the containers
+- `docker compose up -d` to start the containers again after changes to .env file or docker-compose file
